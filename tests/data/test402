@@ -1,13 +1,12 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
 FTP
 FTPS
-FAILURE
 </keywords>
 </info>
 
-# Client-side
 <client>
 <features>
 SSL
@@ -15,20 +14,19 @@ SSL
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP SSL required on non-SSL server
- </name>
- <command>
--k --ftp-ssl-reqd ftp://%HOSTIP:%FTPPORT/%TESTNUMBER
+</name>
+<command>
+--insecure --ftp-ssl-reqd ftp://%HOSTIP:%FTPPORT/%TESTNUMBER
 </command>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
 <errorcode>
 64
 </errorcode>
-<protocol>
+<protocol crlf="yes">
 AUTH SSL
 AUTH TLS
 </protocol>

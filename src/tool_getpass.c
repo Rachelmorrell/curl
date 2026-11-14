@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2020, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -18,6 +18,8 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
+ * SPDX-License-Identifier: curl
+ *
  ***************************************************************************/
 #include "tool_setup.h"
 
@@ -27,10 +29,6 @@
 
 #ifndef HAVE_GETPASS_R
 /* this file is only for systems without getpass_r() */
-
-#ifdef HAVE_FCNTL_H
-#  include <fcntl.h>
-#endif
 
 #ifdef HAVE_TERMIOS_H
 #  include <termios.h>
@@ -44,24 +42,14 @@
 #  include iodef
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #  include <conio.h>
-#endif
-
-#ifdef NETWARE
-#  ifdef __NOVELL_LIBC__
-#    include <screen.h>
-#  else
-#    include <nwconio.h>
-#  endif
 #endif
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #include "tool_getpass.h"
-
-#include "memdebug.h" /* keep this as LAST include */
 
 #ifdef __VMS
 /* VMS implementation */
@@ -70,15 +58,12 @@ char *getpass_r(const char *prompt, char *buffer, size_t buflen)
   long sts;
   short chan;
 
-  /* MSK, 23-JAN-2004, iosbdef.h wasn't in VAX V7.2 or CC 6.4  */
-  /* distribution so I created this.  May revert back later to */
-  /* struct _iosb iosb;                                        */
-  struct _iosb
-     {
-     short int iosb$w_status; /* status     */
-     short int iosb$w_bcnt;   /* byte count */
-     int       unused;        /* unused     */
-     } iosb;
+  /* iosbdef.h was not in VAX v7.2 or CC 6.4 */
+  struct _isb {
+    short int iosb$w_status; /* status */
+    short int iosb$w_bcnt;   /* byte count */
+    int unused;              /* unused */
+  } iosb;
 
   $DESCRIPTOR(ttdesc, "TT");
 
@@ -87,7 +72,7 @@ char *getpass_r(const char *prompt, char *buffer, size_t buflen)
   if(sts & 1) {
     sts = sys$qiow(0, chan,
                    IO$_READPROMPT | IO$M_NOECHO,
-                   &iosb, 0, 0, buffer, buflen, 0, 0,
+                   &iosb, 0, 0, buffer, buflen - 1, 0, 0,
                    prompt, strlen(prompt));
 
     if((sts & 1) && (iosb.iosb$w_status & 1))
@@ -100,74 +85,33 @@ char *getpass_r(const char *prompt, char *buffer, size_t buflen)
 #define DONE
 #endif /* __VMS */
 
-#if defined(WIN32)
-
+#ifdef _WIN32
 char *getpass_r(const char *prompt, char *buffer, size_t buflen)
 {
   size_t i;
-  fputs(prompt, stderr);
+  fputs(prompt, tool_stderr);
 
   for(i = 0; i < buflen; i++) {
-    buffer[i] = (char)getch();
+    buffer[i] = (char)_getch();
     if(buffer[i] == '\r' || buffer[i] == '\n') {
       buffer[i] = '\0';
       break;
     }
-    else
-      if(buffer[i] == '\b')
-        /* remove this letter and if this is not the first key, remove the
-           previous one as well */
-        i = i - (i >= 1 ? 2 : 1);
+    else if(buffer[i] == '\b')
+      /* remove this letter and if this is not the first key, remove the
+         previous one as well */
+      i = i - (i >= 1 ? 2 : 1);
   }
   /* since echo is disabled, print a newline */
-  fputs("\n", stderr);
-  /* if user didn't hit ENTER, terminate buffer */
+  fputs("\n", tool_stderr);
+  /* if user did not hit ENTER, terminate buffer */
   if(i == buflen)
-    buffer[buflen-1] = '\0';
+    buffer[buflen - 1] = '\0';
 
   return buffer; /* we always return success */
 }
 #define DONE
-#endif /* WIN32 */
-
-#ifdef NETWARE
-/* NetWare implementation */
-#ifdef __NOVELL_LIBC__
-char *getpass_r(const char *prompt, char *buffer, size_t buflen)
-{
-  return getpassword(prompt, buffer, buflen);
-}
-#else
-char *getpass_r(const char *prompt, char *buffer, size_t buflen)
-{
-  size_t i = 0;
-
-  printf("%s", prompt);
-  do {
-    buffer[i++] = getch();
-    if(buffer[i-1] == '\b') {
-      /* remove this letter and if this is not the first key,
-         remove the previous one as well */
-      if(i > 1) {
-        printf("\b \b");
-        i = i - 2;
-      }
-      else {
-        RingTheBell();
-        i = i - 1;
-      }
-    }
-    else if(buffer[i-1] != 13)
-      putchar('*');
-
-  } while((buffer[i-1] != 13) && (i < buflen));
-  buffer[i-1] = '\0';
-  printf("\r\n");
-  return buffer;
-}
-#endif /* __NOVELL_LIBC__ */
-#define DONE
-#endif /* NETWARE */
+#endif /* _WIN32 */
 
 #ifndef DONE /* not previously provided */
 
@@ -191,15 +135,15 @@ static bool ttyecho(bool enable, int fd)
 #ifdef HAVE_TERMIOS_H
     tcgetattr(fd, &withecho);
     noecho = withecho;
-    noecho.c_lflag &= ~ECHO;
+    noecho.c_lflag &= ~(tcflag_t)ECHO;
     tcsetattr(fd, TCSANOW, &noecho);
 #elif defined(HAVE_TERMIO_H)
     ioctl(fd, TCGETA, &withecho);
     noecho = withecho;
-    noecho.c_lflag &= ~ECHO;
+    noecho.c_lflag &= ~(tcflag_t)ECHO;
     ioctl(fd, TCSETA, &noecho);
 #else
-    /* neither HAVE_TERMIO_H nor HAVE_TERMIOS_H, we can't disable echo! */
+    /* neither HAVE_TERMIO_H nor HAVE_TERMIOS_H, we cannot disable echo! */
     (void)fd;
     return FALSE; /* not disabled */
 #endif
@@ -218,34 +162,35 @@ static bool ttyecho(bool enable, int fd)
 }
 
 char *getpass_r(const char *prompt, /* prompt to display */
-                char *password,     /* buffer to store password in */
+                char *buffer,       /* buffer to store password in */
                 size_t buflen)      /* size of buffer to store password in */
 {
   ssize_t nread;
   bool disabled;
-  int fd = open("/dev/tty", O_RDONLY);
-  if(-1 == fd)
-    fd = STDIN_FILENO; /* use stdin if the tty couldn't be used */
+  int fd = curlx_open("/dev/tty", O_RDONLY);
+  if(fd == -1)
+    fd = STDIN_FILENO; /* use stdin if the tty could not be used */
 
   disabled = ttyecho(FALSE, fd); /* disable terminal echo */
 
-  fputs(prompt, stderr);
-  nread = read(fd, password, buflen);
-  if(nread > 0)
-    password[--nread] = '\0'; /* null-terminate where enter is stored */
-  else
-    password[0] = '\0'; /* got nothing */
+  fputs(prompt, tool_stderr);
+  nread = read(fd, buffer, buflen - 1);
+  if(nread < 0)
+    nread = 0; /* got nothing */
+  else if(nread && (buffer[nread - 1] == '\n'))
+    nread--; /* remove the newline from pressing enter */
+  buffer[nread] = '\0';
 
   if(disabled) {
     /* if echo actually was disabled, add a newline */
-    fputs("\n", stderr);
+    fputs("\n", tool_stderr);
     (void)ttyecho(TRUE, fd); /* enable echo */
   }
 
   if(STDIN_FILENO != fd)
-    close(fd);
+    curlx_close(fd);
 
-  return password; /* return pointer to buffer */
+  return buffer; /* return pointer to buffer */
 }
 
 #endif /* DONE */

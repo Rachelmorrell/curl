@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<testcase>
+<info>
+<keywords>
+tunittest
+tool-sizeparser
+</keywords>
+</info>
+
+<client>
+<features>
+unittest
+</features>
+<name>
+the size parser for --limit-rate and the seconds parser for timeouts
+</name>
+</client>
+
+<verify>
+</verify>
+</testcase>

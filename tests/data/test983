@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<testcase>
+<info>
+<keywords>
+FTP
+STARTTLS
+</keywords>
+</info>
+
+<reply>
+<servercmd>
+REPLY AUTH 500 unknown command\r\n500 unknown command\r\n331 give password\r\n230 Authenticated\r\n257 "/"\r\n200 OK\r\n200 OK\r\n200 OK\r\n226 Transfer complete
+REPLY PASS 530 Login incorrect
+</servercmd>
+</reply>
+
+<client>
+<features>
+SSL
+</features>
+<server>
+ftp
+</server>
+<name>
+FTP STARTTLS pipelined server response
+</name>
+<file name="%LOGDIR/test%TESTNUMBER.txt">
+data
+    to
+      see
+that FTPS
+works
+  so does it?
+</file>
+<command>
+--ssl --ftp-ssl-control ftp://%HOSTIP:%FTPPORT/%TESTNUMBER -T %LOGDIR/test%TESTNUMBER.txt -u user:secret -P %CLIENTIP
+</command>
+</client>
+
+<verify>
+# 8 is CURLE_WEIRD_SERVER_REPLY
+<errorcode>
+8
+</errorcode>
+<protocol crlf="yes">
+AUTH SSL
+</protocol>
+</verify>
+</testcase>

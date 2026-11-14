@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<testcase>
+<info>
+<keywords>
+FTP
+PASV
+RETR
+</keywords>
+</info>
+<reply>
+<servercmd>
+REPLY PWD 257 %hex["/%03"]hex%
+</servercmd>
+</reply>
+
+<client>
+<server>
+ftp
+</server>
+<name>
+FTP with control characters in PWD response
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/%TESTNUMBER
+</command>
+</client>
+
+<verify>
+<errorcode>
+8
+</errorcode>
+<protocol crlf="yes">
+USER anonymous
+PASS ftp@example.com
+PWD
+</protocol>
+</verify>
+</testcase>

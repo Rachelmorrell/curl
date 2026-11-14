@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<testcase>
+<info>
+<keywords>
+FTP
+libtest
+</keywords>
+</info>
+
+<client>
+<features>
+Debug
+ftp
+</features>
+<server>
+ftp
+</server>
+<name>
+cleanup easy without multi_remove_handle
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/%TESTNUMBER
+</command>
+<setenv>
+CURL_FTP_PWD_STOP=1
+</setenv>
+</client>
+
+<verify>
+<protocol crlf="yes">
+USER anonymous
+PASS ftp@example.com
+USER anonymous
+PASS ftp@example.com
+PWD
+EPSV
+TYPE I
+SIZE %TESTNUMBER
+</protocol>
+</verify>
+</testcase>

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -5,7 +6,6 @@ globbing
 HTTP
 </keywords>
 </info>
-# Server-side
 <reply>
 <data>
 HTTP/1.1 200 OK
@@ -16,22 +16,20 @@ Connection: close
 </data>
 </reply>
 
-# Client-side
 <client>
 <server>
 http
 </server>
- <name>
+<name>
 glob [0-1] with stuff after range (7.33.0 regression)
- </name>
- <command>
+</name>
+<command>
 "%HOSTIP:%HTTPPORT/0[0-1]/%TESTNUMBER"
 </command>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
-<protocol>
+<protocol crlf="headers">
 GET /00/%TESTNUMBER HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
 User-Agent: curl/%VERSION

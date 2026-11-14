@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<testcase>
+<info>
+<keywords>
+FTP
+EPSV
+RETR
+Range
+</keywords>
+</info>
+<reply>
+<data>
+0123456789abcdef0123456789abcdef0123456789abcdef
+</data>
+<datacheck>
+0123456789abcdef0123456789abcdef0123456789abcdef
+</datacheck>
+<servercmd>
+RETRSIZE 7
+</servercmd>
+<size>
+8
+</size>
+</reply>
+
+<client>
+<server>
+ftp
+</server>
+<name>
+FTP growing file support
+</name>
+<command>
+--ignore-content-length ftp://%HOSTIP:%FTPPORT/%TESTNUMBER
+</command>
+</client>
+
+<verify>
+<protocol crlf="yes">
+USER anonymous
+PASS ftp@example.com
+PWD
+EPSV
+TYPE I
+RETR %TESTNUMBER
+</protocol>
+</verify>
+</testcase>

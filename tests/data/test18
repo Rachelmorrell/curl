@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -7,23 +8,22 @@ globbing
 {} list
 </keywords>
 </info>
-# Server-side
 <reply>
-<data nocheck="yes">
+<data crlf="headers" nocheck="yes">
 HTTP/1.1 200 OK
 Funny-head: yesyes
 Content-Length: 4
 
 moo
 </data>
-<data2>
+<data2 crlf="headers">
 HTTP/1.1 200 OK
 Funny-head: yesyes
 Content-Length: 4
 
 foo
 </data2>
-<data3>
+<data3 crlf="headers">
 HTTP/1.1 200 OK
 Funny-head: yesyes
 Content-Length: 4
@@ -32,22 +32,20 @@ hoo
 </data3>
 </reply>
 
-# Client-side
 <client>
 <server>
 http
 </server>
- <name>
+<name>
 multiple requests using {} in URL
- </name>
- <command>
+</name>
+<command>
 "%HOSTIP:%HTTPPORT/{%TESTNUMBER,%TESTNUMBER0002,%TESTNUMBER0003}"
 </command>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
-<protocol>
+<protocol crlf="headers">
 GET /%TESTNUMBER HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
 User-Agent: curl/%VERSION
@@ -64,20 +62,17 @@ User-Agent: curl/%VERSION
 Accept: */*
 
 </protocol>
-<stdout>
---_curl_--%HOSTIP:%HTTPPORT/%TESTNUMBER
+<stdout crlf="headers">
 HTTP/1.1 200 OK
 Funny-head: yesyes
 Content-Length: 4
 
 moo
---_curl_--%HOSTIP:%HTTPPORT/%TESTNUMBER0002
 HTTP/1.1 200 OK
 Funny-head: yesyes
 Content-Length: 4
 
 foo
---_curl_--%HOSTIP:%HTTPPORT/%TESTNUMBER0003
 HTTP/1.1 200 OK
 Funny-head: yesyes
 Content-Length: 4

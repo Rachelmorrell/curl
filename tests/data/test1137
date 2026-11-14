@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -7,7 +8,6 @@ RETR
 --ignore-content-length
 </keywords>
 </info>
-# Server-side
 <reply>
 <data>
 data
@@ -22,23 +22,21 @@ REPLY EPSV 500 no such command
 </servercmd>
 </reply>
 
-# Client-side
 <client>
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP RETR --ignore-content-length
- </name>
- <command>
+</name>
+<command>
 ftp://%HOSTIP:%FTPPORT/%TESTNUMBER --ignore-content-length
 </command>
 
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
-<protocol>
+<protocol crlf="yes">
 USER anonymous
 PASS ftp@example.com
 PWD
@@ -46,7 +44,6 @@ EPSV
 PASV
 TYPE I
 RETR %TESTNUMBER
-QUIT
 </protocol>
 </verify>
 </testcase>

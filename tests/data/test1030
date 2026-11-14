@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -8,9 +9,8 @@ HTTP Digest auth
 </keywords>
 </info>
 
-# Server-side
 <reply>
-<data>
+<data crlf="headers">
 HTTP/1.1 401 Authorization Required
 Server: Apache/1.3.27 (Darwin) PHP/4.1.2
 WWW-Authenticate: Blackmagic realm="gimme all yer s3cr3ts"
@@ -24,7 +24,7 @@ This is not the real page
 
 # This is supposed to be returned when the server gets a
 # Authorization: Digest line passed-in from the client
-<data1000>
+<data1000 crlf="headers">
 HTTP/1.1 200 OK
 Server: Apache/1.3.27 (Darwin) PHP/4.1.2
 Content-Type: text/html; charset=iso-8859-1
@@ -34,7 +34,7 @@ Connection: close
 This IS the real page!
 </data1000>
 
-<datacheck>
+<datacheck crlf="headers">
 HTTP/1.1 401 Authorization Required
 Server: Apache/1.3.27 (Darwin) PHP/4.1.2
 WWW-Authenticate: Blackmagic realm="gimme all yer s3cr3ts"
@@ -54,7 +54,6 @@ This IS the real page!
 
 </reply>
 
-# Client-side
 <client>
 <server>
 http
@@ -62,14 +61,15 @@ http
 <features>
 !SSPI
 crypto
+digest
 </features>
- <name>
-HTTP PUT with --anyauth authorization (picking Digest)
- </name>
- <command>
-http://%HOSTIP:%HTTPPORT/%TESTNUMBER -T log/put%TESTNUMBER -u testuser:testpass --anyauth
+<name>
+HTTP PUT with --anyauth, picking Digest. Persistent connection.
+</name>
+<command>
+http://%HOSTIP:%HTTPPORT/%TESTNUMBER -T %LOGDIR/put%TESTNUMBER -u testuser:testpass --anyauth
 </command>
-<file name="log/put%TESTNUMBER">
+<file name="%LOGDIR/put%TESTNUMBER">
 This is data we upload with PUT
 a second line
 line three
@@ -77,15 +77,13 @@ four is the number of lines
 </file>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
-<protocol>
+<protocol crlf="headers">
 PUT /%TESTNUMBER HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
 User-Agent: curl/%VERSION
 Accept: */*
 Content-Length: 85
-Expect: 100-continue
 
 This is data we upload with PUT
 a second line
@@ -97,7 +95,6 @@ Authorization: Digest username="testuser", realm="gimme all yer s3cr3ts", nonce=
 User-Agent: curl/%VERSION
 Accept: */*
 Content-Length: 85
-Expect: 100-continue
 
 This is data we upload with PUT
 a second line

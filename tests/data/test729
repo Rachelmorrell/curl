@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<testcase>
+<info>
+<keywords>
+HTTP
+HTTP GET
+SOCKS4
+</keywords>
+</info>
+
+<reply>
+</reply>
+
+<client>
+<features>
+proxy
+</features>
+<server>
+http
+socks4
+</server>
+<name>
+SOCKS4 with long proxy username
+</name>
+<command>
+http://fake --limit-rate 1 -x socks4a://%repeat[1015 x a]%@%HOSTIP:%SOCKSPORT
+</command>
+</client>
+
+<verify>
+# CURLE_PROXY
+<errorcode>
+97
+</errorcode>
+</verify>
+</testcase>

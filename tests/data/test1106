@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -7,9 +8,8 @@ HTTP proxy
 </keywords>
 </info>
 
-# Server-side
 <reply>
-<data nocheck="yes">
+<data crlf="headers" nocheck="yes">
 HTTP/1.1 200 OK swsclose
 Date: Tue, 09 Nov 2010 14:49:00 GMT
 Server: test-server/fake
@@ -20,7 +20,6 @@ hello
 </data>
 </reply>
 
-# Client-side
 <client>
 <features>
 ftp
@@ -29,22 +28,21 @@ proxy
 <server>
 http
 </server>
- <name>
+<name>
 FTP URL and with ftp_proxy environment variable set
- </name>
+</name>
 
 <setenv>
 ftp_proxy=http://%HOSTIP:%HTTPPORT/
 </setenv>
- <command>
+<command>
 ftp://%HOSTIP:23456/%TESTNUMBER
 </command>
 
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
-<protocol>
+<protocol crlf="headers">
 GET ftp://%HOSTIP:23456/%TESTNUMBER HTTP/1.1
 Host: %HOSTIP:23456
 User-Agent: curl/%VERSION

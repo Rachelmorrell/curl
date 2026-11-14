@@ -6,7 +6,7 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 2004 - 2020, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
@@ -19,24 +19,31 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
+# SPDX-License-Identifier: curl
+#
 ###########################################################################
 
 # pass files as argument(s)
 
-my $docroot="https://curl.se/libcurl/c";
+use strict;
+use warnings;
 
-for $f (@ARGV) {
-    open(NEW, ">$f.new");
-    open(F, "<$f");
+use File::Copy;
+
+my $docroot = "https://curl.se/libcurl/c";
+
+for my $f (@ARGV) {
+    open(NEW, ">", "$f.new");
+    open(F, "<", $f);
     while(<F>) {
         my $l = $_;
         if($l =~ /\/* $docroot/) {
-            # just ignore preciously added refs
+            # ignore previously added refs
         }
         elsif($l =~ /^( *).*curl_easy_setopt\([^,]*, *([^ ,]*) *,/) {
-            my ($prefix, $anc) = ($1, $2);
-            $anc =~ s/_//g;
-            print NEW "$prefix/* $docroot/curl_easy_setopt.html#$anc */\n";
+            my ($prefix, $anchor) = ($1, $2);
+            $anchor =~ s/_//g;
+            print NEW "$prefix/* $docroot/curl_easy_setopt.html#$anchor */\n";
             print NEW $l;
         }
         elsif($l =~ /^( *).*(curl_([^\(]*))\(/) {
@@ -51,6 +58,6 @@ for $f (@ARGV) {
     close(F);
     close(NEW);
 
-    system("mv $f $f.org");
-    system("mv $f.new $f");
+    move($f, "$f.org");
+    move("$f.new", $f);
 }

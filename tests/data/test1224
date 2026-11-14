@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -6,7 +7,6 @@ PASV
 RETR
 </keywords>
 </info>
-# Server-side
 <reply>
 <data>
 data
@@ -18,23 +18,21 @@ works
 </data>
 </reply>
 
-# Client-side
 <client>
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP fetch a file from the root directory
- </name>
- <command>
+</name>
+<command>
 ftp://%HOSTIP:%FTPPORT//%TESTNUMBER
 </command>
 
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
-<protocol>
+<protocol crlf="yes">
 USER anonymous
 PASS ftp@example.com
 PWD
@@ -43,7 +41,6 @@ EPSV
 TYPE I
 SIZE %TESTNUMBER
 RETR %TESTNUMBER
-QUIT
 </protocol>
 </verify>
 </testcase>

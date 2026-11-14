@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -6,10 +7,10 @@ HTTP GET
 HTTP replaced headers
 CURLOPT_TIMECONDITION
 If-Modified-Since
+libtest
 </keywords>
 </info>
 
-# Server-side
 <reply>
 <data nocheck="yes">
 HTTP/1.1 503 Error
@@ -18,7 +19,6 @@ Server: test-server/swsclose
 
 </data>
 </reply>
-# Client-side
 <client>
 <server>
 http
@@ -35,7 +35,7 @@ http://%HOSTIP:%HTTPPORT/%TESTNUMBER
 </client>
 
 <verify>
-<protocol>
+<protocol crlf="headers">
 GET /%TESTNUMBER HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
 Accept: */*

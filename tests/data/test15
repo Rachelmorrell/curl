@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -6,9 +7,8 @@ HTTP GET
 --write-out
 </keywords>
 </info>
-# Server-side
 <reply>
-<data nocheck="yes">
+<data crlf="headers" nocheck="yes">
 HTTP/1.1 200 OK
 Fake: yes
 Fake: yes
@@ -19,22 +19,20 @@ Repeated nonsense-headers
 </data>
 </reply>
 
-# Client-side
 <client>
 <server>
 http
 </server>
- <name>
+<name>
 --write-out test
- </name>
- <command>
+</name>
+<command>
 http://%HOSTIP:%HTTPPORT/want/%TESTNUMBER --write-out "%{url_effective} %{http_code} %{size_download}\n"
 </command>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
-<stdout>
+<stdout crlf="headers">
 HTTP/1.1 200 OK
 Fake: yes
 Fake: yes
@@ -44,7 +42,7 @@ Content-Length: 26
 Repeated nonsense-headers
 http://%HOSTIP:%HTTPPORT/want/%TESTNUMBER 200 26
 </stdout>
-<protocol>
+<protocol crlf="headers">
 GET /want/%TESTNUMBER HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
 User-Agent: curl/%VERSION

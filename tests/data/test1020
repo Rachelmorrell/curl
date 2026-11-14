@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -6,36 +7,32 @@ Range
 </keywords>
 </info>
 
-# Server-side
 <reply>
-<data>
-</data>
 </reply>
 
-# Client-side
 <client>
-<server>
-none
-</server>
 <features>
 file
 </features>
- <name>
--Y range on a file:// URL to stdout
- </name>
+<name>
+-Y range on a file:// URL to stdout, then one larger than the file
+</name>
 <command option="no-include">
--r -9 file://localhost%FILE_PWD/log/test%TESTNUMBER.txt 
+-r -9 file://localhost%FILE_PWD/%LOGDIR/test%TESTNUMBER.txt --next -r -23 file://localhost%FILE_PWD/%LOGDIR/test%TESTNUMBER.txt
 </command>
-<file name="log/test%TESTNUMBER.txt">
+<file name="%LOGDIR/test%TESTNUMBER.txt">
 1234567890
 1234567890
 </file>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
 <stdout>
 34567890
 </stdout>
+# the file is 22 bytes, so the second transfer asks for one byte too many
+<errorcode>
+36
+</errorcode>
 </verify>
 </testcase>

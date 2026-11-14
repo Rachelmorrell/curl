@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<testcase>
+<info>
+<keywords>
+HTTPS
+HTTP GET
+libtest
+</keywords>
+</info>
+
+<reply>
+<data>
+</data>
+</reply>
+
+<client>
+# SSL with libraries supporting CURLOPT_CERTINFO
+<features>
+SSL
+!wolfssl
+</features>
+<server>
+https
+</server>
+<name>
+verify certificate chain order with simple HTTPS GET
+</name>
+<command>
+https://%HOSTIP:%HTTPSPORT/%TESTNUMBER
+</command>
+</client>
+
+<verify>
+<protocol crlf="headers">
+GET /%TESTNUMBER HTTP/1.1
+Host: %HOSTIP:%HTTPSPORT
+Accept: */*
+
+</protocol>
+</verify>
+</testcase>

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -5,7 +6,6 @@ HTTP
 --write-out
 </keywords>
 </info>
-# Server-side
 <reply>
 <data nocheck="yes">
 HTTP/1.1 200 OK
@@ -19,7 +19,6 @@ testdata
 
 </reply>
 
-# Client-side
 <client>
 <server>
 http
@@ -33,7 +32,6 @@ http://%HOSTIP:%HTTPPORT/%TESTNUMBER --write-out '%{http_version}'
 </command>
 </client>
 
-# Verify data
 <verify>
 <stdout nonewline="yes">
 HTTP/1.1 200 OK
@@ -45,7 +43,7 @@ Content-Type: text/plain
 testdata
 1.1
 </stdout>
-<protocol>
+<protocol crlf="headers">
 GET /%TESTNUMBER HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
 User-Agent: curl/%VERSION

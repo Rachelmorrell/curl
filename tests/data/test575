@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -6,36 +7,31 @@ RETR
 multi
 wildcardmatch
 ftplistparser
+libtest
 </keywords>
 </info>
 
-# Server-side
 <reply>
 <data>
 </data>
 </reply>
 
-# Client-side
 <client>
 <server>
 ftp
 </server>
-<tool>
-lib%TESTNUMBER
-</tool>
- <name>
+<name>
 FTP wildcard download - dup_handle and multi interface
- </name>
- <command>
+</name>
+<command>
 ftp://%HOSTIP:%FTPPORT/fully_simulated/UNIX/*
 </command>
 </client>
-# Verify data after the test has been "shot"
 <verify>
 <errorcode>
 0
 </errorcode>
-<protocol>
+<protocol crlf="yes">
 USER anonymous
 PASS ftp@example.com
 PWD
@@ -57,9 +53,6 @@ EPSV
 RETR file.txt
 EPSV
 RETR someothertext.txt
-CWD /
-CWD fully_simulated
-CWD UNIX
 EPSV
 TYPE A
 LIST
@@ -76,7 +69,6 @@ EPSV
 RETR file.txt
 EPSV
 RETR someothertext.txt
-QUIT
 USER anonymous
 PASS ftp@example.com
 PWD
@@ -98,7 +90,6 @@ EPSV
 RETR file.txt
 EPSV
 RETR someothertext.txt
-QUIT
 </protocol>
 <stdout>
 This file should have permissions 444
@@ -117,5 +108,8 @@ This file should have permissions 777
 This is content of file "file.txt"
 Some junk ;-) This file does not really exist.
 </stdout>
+<limits>
+Allocations: 1500
+</limits>
 </verify>
 </testcase>

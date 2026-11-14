@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<testcase>
+<info>
+<keywords>
+CURLOPT_POSTFIELDSIZE_LARGE
+duphandle
+libtest
+</keywords>
+</info>
+
+<reply>
+</reply>
+
+<client>
+
+<name>
+blank COPYPOSTFIELDS and duphandle
+</name>
+
+<command>
+localhost
+</command>
+</client>
+
+<verify>
+</verify>
+</testcase>

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -7,15 +8,14 @@ STOR
 </keywords>
 </info>
 
-# Client-side
 <client>
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP PASV upload file
- </name>
-<file name="log/test%TESTNUMBER.txt">
+</name>
+<file name="%LOGDIR/test%TESTNUMBER.txt">
 data
     to
       see
@@ -23,12 +23,11 @@ that FTP
 works
   so does it?
 </file>
- <command>
-ftp://%HOSTIP:%FTPPORT/%TESTNUMBER -T log/test%TESTNUMBER.txt
+<command>
+ftp://%HOSTIP:%FTPPORT/%TESTNUMBER -T %LOGDIR/test%TESTNUMBER.txt
 </command>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
 <upload>
 data
@@ -38,14 +37,13 @@ that FTP
 works
   so does it?
 </upload>
-<protocol>
+<protocol crlf="yes">
 USER anonymous
 PASS ftp@example.com
 PWD
 EPSV
 TYPE I
 STOR %TESTNUMBER
-QUIT
 </protocol>
 </verify>
 </testcase>

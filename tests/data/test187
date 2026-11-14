@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -7,7 +8,6 @@ followlocation
 </keywords>
 </info>
 
-# Server-side
 <reply>
 <data>
 HTTP/1.1 301 This is a weirdo text message
@@ -45,22 +45,20 @@ If this is received, the location following worked
 </datacheck>
 </reply>
 
-# Client-side
 <client>
 <server>
 http
 </server>
- <name>
-HTTP redirect with bad host name separation and slash in parameters
- </name>
- <command>
+<name>
+HTTP redirect with bad hostname separation and slash in parameters
+</name>
+<command>
 http://%HOSTIP:%HTTPPORT?oh=what-weird=test/%TESTNUMBER -L
 </command>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
-<protocol>
+<protocol crlf="headers">
 GET /?oh=what-weird=test/%TESTNUMBER HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
 User-Agent: curl/%VERSION

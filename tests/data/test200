@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -15,18 +16,17 @@ moo
 </data>
 </reply>
 
-# Client-side
 <client>
 <server>
 file
 </server>
- <name>
+<name>
 basic file:// file
- </name>
+</name>
 <command option="no-include">
-file://localhost%FILE_PWD/log/test%TESTNUMBER.txt
+file://localhost%FILE_PWD/%LOGDIR/test%TESTNUMBER.txt
 </command>
-<file name="log/test%TESTNUMBER.txt">
+<file name="%LOGDIR/test%TESTNUMBER.txt">
 foo
    bar
 bar
@@ -35,7 +35,6 @@ moo
 </file>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
 </verify>
 </testcase>

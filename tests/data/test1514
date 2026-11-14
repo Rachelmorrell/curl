@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -5,12 +6,12 @@ HTTP
 HTTP POST
 Content-Length
 chunked Transfer-Encoding
+libtest
 </keywords>
 </info>
 
-# Server-side
 <reply>
-<data nocheck="yes">
+<data crlf="headers" nocheck="yes">
 HTTP/1.1 200 OK
 Date: Sun, 19 Jan 2014 18:50:58 GMT
 Server: test-server/fake swsclose
@@ -19,14 +20,10 @@ Connection: close
 </data>
 </reply>
 
-# Client-side
 <client>
 <server>
 http
 </server>
-<tool>
-lib%TESTNUMBER
-</tool>
 <name>
 HTTP POST with read callback and unknown data size
 </name>
@@ -35,11 +32,10 @@ http://%HOSTIP:%HTTPPORT/%TESTNUMBER
 </command>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
 # Content-Length header is not present
 # Transfer-Encoding header is added automatically
-<protocol>
+<protocol crlf="yes">
 POST /%TESTNUMBER HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
 Accept: */*

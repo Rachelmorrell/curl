@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -7,8 +8,6 @@ SOCKS5
 </keywords>
 </info>
 
-#
-# Server-side
 <reply>
 <data>
 HTTP/1.1 200 OK
@@ -26,25 +25,24 @@ Funny-head: yesyes
 </data>
 </reply>
 
-#
-# Client-side
 <client>
+<features>
+proxy
+</features>
 <server>
 http
 socks5
 </server>
- <name>
+<name>
 HTTP GET via SOCKS5 set with --proxy
- </name>
- <command>
-http://%HOSTIP:%HTTPPORT/%TESTNUMBER --proxy socks5://%HOSTIP:%SOCKSPORT 
+</name>
+<command>
+http://%HOSTIP:%HTTPPORT/%TESTNUMBER --proxy socks5://%HOSTIP:%SOCKSPORT
 </command>
 </client>
 
-#
-# Verify data after the test has been "shot"
 <verify>
-<protocol>
+<protocol crlf="headers">
 GET /%TESTNUMBER HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
 User-Agent: curl/%VERSION

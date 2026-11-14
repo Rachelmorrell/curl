@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #***************************************************************************
 #                                  _   _ ____  _
 #  Project                     ___| | | |  _ \| |
@@ -6,7 +6,7 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 2020 - 2021, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
@@ -19,6 +19,8 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
+# SPDX-License-Identifier: curl
+#
 ###########################################################################
 
 ###############################################
@@ -29,15 +31,15 @@
 #
 # $ ./scripts/release-notes.pl
 #
-# 2. Edit RELEASE-NOTES and remove all entries that don't belong.  Unused
-# references below will be cleaned up in the next step. Make sure to move
-# "changes" up to the changes section. All entries will by default be listed
-# under bug-fixes as this script can't know where to put them.
+# 2. Edit RELEASE-NOTES and remove all entries that do not belong.  Unused
+# references below are cleaned up in the next step. Make sure to move
+# "changes" up to the changes section. All entries are by default listed
+# under bug-fixes as this script cannot know where to put them.
 #
 # 3. Run the cleanup script and let it sort the entries and remove unused
 # references from lines you removed in step (2):
 #
-# $ ./script/release-notes.pl cleanup
+# $ ./scripts/release-notes.pl cleanup
 #
 # 4. Reload RELEASE-NOTES and verify that things look okay. The cleanup
 # procedure can and should be re-run when lines are removed or rephrased.
@@ -52,22 +54,38 @@
 #
 ################################################
 
-my $cleanup = ($ARGV[0] eq "cleanup");
-my @gitlog=`git log @^{/RELEASE-NOTES:.synced}..` if(!$cleanup);
-my @releasenotes=`cat RELEASE-NOTES`;
+use strict;
+use warnings;
+
+my $cleanup = (@ARGV && $ARGV[0] eq "cleanup");
+my @gitlog = qx(git log @^{/RELEASE-NOTES:.synced}..) if(!$cleanup);
+my @releasenotes = qx(cat RELEASE-NOTES);
 
 my @o; # the entire new RELEASE-NOTES
 my @refused; # [num] = [2 bits of use info]
 my @refs; # [number] = [URL]
+my %dupe;
 for my $l (@releasenotes) {
     if($l =~ /^ o .*\[(\d+)\]/) {
         # referenced, set bit 0
-        $refused[$1]=1;
+        $refused[$1] = 1;
+        my $m = $l;
+        chomp $m;
+        $m =~ s/^ o //;
+        $m =~ s/ \[\d+\]$//;
+        $dupe{$m} = 1; # mark this as present
     }
     elsif($l =~ /^ \[(\d+)\] = (.*)/) {
         # listed in a reference, set bit 1
         $refused[$1] |= 2;
         $refs[$1] = $2;
+    }
+    # mention without reference
+    elsif($l =~ /^ o (.*)/) {
+        my $m = $l;
+        chomp $m;
+        $m =~ s/^ o //;
+        $dupe{$m} = 1; # mark this as present
     }
 }
 
@@ -81,6 +99,35 @@ sub getref {
     # add at the end
     return $#refs + 1;
 }
+
+# '#num'
+# 'num'
+# 'https://github.com/curl/curl/issues/6939'
+# 'https://github.com/curl/curl-www/issues/69'
+# 'https://elsewhere.example.com/discussion'
+
+sub extract {
+    my ($ref) = @_;
+    if($ref =~ /^(\#|)(\d+)/) {
+        # return the plain number
+        return $2;
+    }
+    elsif($ref =~ /^https:\/\/github.com\/curl\/curl\/.*\/(\d+)/) {
+        # return the plain number
+        return $1;
+    }
+    elsif($ref =~ /:\/\//) {
+        # contains a '://', return the URL
+        return $ref;
+    }
+    # false alarm, not a valid line
+}
+
+my @fixes;
+my @closes;
+my @bug;
+my @line;
+my %moreinfo;
 
 my $short;
 my $first;
@@ -100,6 +147,7 @@ for my $l (@gitlog) {
     elsif(($l =~ /^    (.*)/) && !$first) {
         # first line
         $short = $1;
+        $short =~ s/ ?\[(ci skip|skip ci)\]//g;
         $first = 1;
         push @line, $short;
     }
@@ -107,14 +155,17 @@ for my $l (@gitlog) {
         # not the first
         my $line = $1;
 
-        if($line =~ /^Fixes(:|) .*[^0-9](\d+)/i) {
-            push @fixes, $2;
+        if($line =~ /^Fixes(:|) *(.*)/i) {
+            my $ref = extract($2);
+            push @fixes, $ref if($ref);
         }
-        elsif($line =~ /^Clo(s|)es(:|) .*[^0-9](\d+)/i) {
-            push @closes, $3;
+        elsif($line =~ /^Cl([os]+)es(:|) *(.*)/i) {
+            my $ref = extract($3);
+            push @closes, $ref if($ref);
         }
         elsif($line =~ /^Bug: (.*)/i) {
-            push @bug, $1;
+            my $ref = extract($1);
+            push @bug, $ref if($ref);
         }
     }
 }
@@ -124,8 +175,13 @@ if($first) {
 
 # call at the end of a parsed commit
 sub onecommit {
-    my ($short)=@_;
-    my $ref;
+    my ($short) = @_;
+    my $ref = '';
+
+    if($dupe{$short}) {
+        # this git commit message was found in the file
+        return;
+    }
 
     if($bug[0]) {
         $ref = $bug[0];
@@ -143,7 +199,7 @@ sub onecommit {
     if($ref) {
         my $r = getref();
         $refs[$r] = $ref;
-        $moreinfo{$short}=$r;
+        $moreinfo{$short} = $r;
         $refused[$r] |= 1;
     }
 }
@@ -156,9 +212,16 @@ for my $l (@releasenotes) {
         push @o, $l;
         push @o, "\n";
         for my $f (@line) {
+            if($dupe{$f}) {
+                # this item is already listed
+                next;
+            }
+
             push @o, sprintf " o %s%s\n", $f,
                 $moreinfo{$f}? sprintf(" [%d]", $moreinfo{$f}): "";
-            $refused[$moreinfo{$f}]=3;
+            if($moreinfo{$f}) {
+                $refused[$moreinfo{$f}] = 3;
+            }
         }
         push @o, " --- new entries are listed above this ---";
         next;
@@ -198,7 +261,7 @@ for my $n (1 .. $#refs) {
     }
 }
 
-open(O, ">RELEASE-NOTES");
+open(O, ">", 'RELEASE-NOTES');
 for my $l (@o) {
     print O $l;
 }

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
@@ -8,9 +9,8 @@ HTTP proxy Basic auth
 </keywords>
 </info>
 
-# Server-side
 <reply>
-<data>
+<data crlf="yes">
 HTTP/1.1 200 OK swsclose
 Date: Tue, 09 Nov 2010 14:49:00 GMT
 Content-Type: text/html
@@ -20,15 +20,14 @@ the content would go here
 </data>
 </reply>
 
-# Client-side
 <client>
 <server>
 http
 </server>
- <name>
+<name>
 HTTP with proxy string including http:// and user only
- </name>
- <command>
+</name>
+<command>
 http://we.want.that.site.com/%TESTNUMBER -x http://f%61ke@%HOSTIP:%HTTPPORT
 </command>
 <features>
@@ -36,12 +35,11 @@ proxy
 </features>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
-<protocol>
+<protocol crlf="headers">
 GET http://we.want.that.site.com/%TESTNUMBER HTTP/1.1
 Host: we.want.that.site.com
-Proxy-Authorization: Basic ZmFrZTo=
+Proxy-Authorization: Basic %b64[fake:]b64%
 User-Agent: curl/%VERSION
 Accept: */*
 Proxy-Connection: Keep-Alive

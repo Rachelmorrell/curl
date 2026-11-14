@@ -1,31 +1,28 @@
+<?xml version="1.0" encoding="US-ASCII"?>
 <testcase>
 <info>
 <keywords>
 FTP
+STOR
+libtest
 </keywords>
 </info>
 
-# Server-side
 <reply>
 </reply>
 
-# Client-side
 <client>
 <server>
 ftp
 </server>
-# tool is what to use instead of 'curl'
-<tool>
-lib%TESTNUMBER
-</tool>
 
- <name>
+<name>
 FTP upload with rename after transfer
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/%TESTNUMBER log/upload%TESTNUMBER
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/%TESTNUMBER %LOGDIR/upload%TESTNUMBER
 </command>
-<file name="log/upload%TESTNUMBER">
+<file name="%LOGDIR/upload%TESTNUMBER">
 Contents
 of
 a file
@@ -38,7 +35,6 @@ works?
 </file>
 </client>
 
-# Verify data after the test has been "shot"
 <verify>
 <upload>
 Contents
@@ -51,7 +47,7 @@ upload
 
 works?
 </upload>
-<protocol>
+<protocol crlf="yes">
 USER anonymous
 PASS ftp@example.com
 PWD
@@ -60,7 +56,6 @@ TYPE I
 STOR %TESTNUMBER
 RNFR %TESTNUMBER
 RNTO %TESTNUMBER-forreal
-QUIT
 </protocol>
 </verify>
 </testcase>

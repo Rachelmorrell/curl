@@ -1,0 +1,146 @@
+#***************************************************************************
+#                                  _   _ ____  _
+#  Project                     ___| | | |  _ \| |
+#                             / __| | | | |_) | |
+#                            | (__| |_| |  _ <| |___
+#                             \___|\___/|_| \_\_____|
+#
+# Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
+#
+# This software is licensed as described in the file COPYING, which
+# you should have received as part of this distribution. The terms
+# are also available at https://curl.se/docs/copyright.html.
+#
+# You may opt to use, copy, modify, merge, publish, distribute and/or sell
+# copies of the Software, and permit persons to whom the Software is
+# furnished to do so, under the terms of the COPYING file.
+#
+# This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+# KIND, either express or implied.
+#
+# SPDX-License-Identifier: curl
+#
+###########################################################################
+#
+import logging
+import os
+import shutil
+import subprocess
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional
+
+from . import ExecResult, RunProfile
+from .env import Env
+
+log = logging.getLogger(__name__)
+
+
+class LocalClient:
+
+    def __init__(self, name: str, env: Env, run_dir: Optional[str] = None,
+                 timeout: Optional[float] = None,
+                 run_env: Optional[Dict[str, str]] = None):
+        self.name = name
+        self.path = os.path.join(env.build_dir, 'tests/libtest/libtests')
+        self.env = env
+        self._run_env = run_env
+        self._timeout = timeout or env.test_timeout
+        self._curl = os.environ.get('CURL', env.curl)
+        self._run_dir = run_dir or os.path.join(env.gen_dir, name)
+        self._stdoutfile = f'{self._run_dir}/stdout'
+        self._stderrfile = f'{self._run_dir}/stderr'
+        self._rmrf(self._run_dir)
+        self._mkpath(self._run_dir)
+
+    @property
+    def run_dir(self) -> str:
+        return self._run_dir
+
+    @property
+    def stderr_file(self) -> str:
+        return self._stderrfile
+
+    def exists(self) -> bool:
+        return os.path.exists(self.path)
+
+    def download_file(self, i: int) -> str:
+        return os.path.join(self._run_dir, f'download_{i}.data')
+
+    def _rmf(self, path):
+        if os.path.exists(path):
+            os.remove(path)
+
+    def _rmrf(self, path):
+        if os.path.exists(path):
+            shutil.rmtree(path)
+
+    def _mkpath(self, path):
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+    def run(self, args, with_profile: bool = False):
+        self._rmf(self._stdoutfile)
+        self._rmf(self._stderrfile)
+        start = datetime.now(timezone.utc)
+        exception = None
+        myargs = [self.path, self.name]
+        myargs.extend(args)
+        run_env = None
+        profile = None
+        if self._run_env:
+            run_env = self._run_env.copy()
+            for key in ['CURL_DEBUG']:
+                if key in os.environ and key not in run_env:
+                    run_env[key] = os.environ[key]
+        started_at = datetime.now(timezone.utc)
+        try:
+            with open(self._stdoutfile, 'w') as cout, open(self._stderrfile, 'w') as cerr:
+                if with_profile:
+                    end_at = started_at + timedelta(seconds=self._timeout) \
+                        if self._timeout else None
+                    p = subprocess.Popen(myargs, stderr=cerr, stdout=cout,
+                                         cwd=self._run_dir, shell=False,
+                                         env=run_env)
+                    profile = RunProfile(p.pid, started_at, self._run_dir)
+                    ptimeout = 0.0
+                    while True:
+                        try:
+                            p.wait(timeout=ptimeout)
+                            break
+                        except subprocess.TimeoutExpired as e:
+                            if end_at and datetime.now(timezone.utc) >= end_at:
+                                p.kill()
+                                raise subprocess.TimeoutExpired(cmd=args, timeout=self._timeout) from e
+                            profile.sample()
+                            ptimeout = 0.001
+                    exitcode = p.returncode
+                    profile.finish()
+                    log.info(f'done: exit={exitcode}, profile={profile}')
+                else:
+                    p = subprocess.run(myargs, stderr=cerr, stdout=cout,
+                                       cwd=self._run_dir, shell=False,
+                                       input=None, env=run_env,
+                                       timeout=self._timeout, check=False)
+                exitcode = p.returncode
+        except subprocess.TimeoutExpired:
+            log.warning(f'Timeout after {self._timeout}s: {args}')
+            exitcode = -1
+            exception = 'TimeoutExpired'
+        with open(self._stdoutfile) as fout, open(self._stderrfile) as ferr:
+            coutput = fout.readlines()
+            cerrput = ferr.readlines()
+        return ExecResult(args=myargs, exit_code=exitcode, exception=exception,
+                          stdout=coutput, stderr=cerrput,
+                          duration=datetime.now(timezone.utc) - start,
+                          profile=profile)
+
+    def dump_logs(self):
+        lines = []
+        lines.append('>>--stdout ----------------------------------------------\n')
+        with open(self._stdoutfile) as fd:
+            lines.extend(fd.readlines())
+        lines.append('>>--stderr ----------------------------------------------\n')
+        with open(self._stderrfile) as fd:
+            lines.extend(fd.readlines())
+        lines.append('<<-------------------------------------------------------\n')
+        return ''.join(lines)
